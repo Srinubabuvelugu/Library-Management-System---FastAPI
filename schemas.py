@@ -2,7 +2,7 @@
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from datetime import date, datetime
 from typing import Optional
-
+from enum import Enum
 
 class UserCreate(BaseModel):
     name: str = Field(..., min_length=3, max_length=50)
@@ -61,3 +61,11 @@ class BorrowResponse(BaseModel):
     status: str
 
     model_config = ConfigDict(from_attributes=True)
+
+
+
+
+
+class BorrowStatus(str, Enum):
+    BORROWED = "borrowed"
+    RETURNED = "returned"

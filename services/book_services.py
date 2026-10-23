@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
-from models import Book
+from models import Book, Borrow
 from schemas import BookCreate, BookResponse, BookUpdate
 
 
@@ -101,6 +101,36 @@ def update_book(db: Session,book_id: int,book_data: BookUpdate) -> Book | None:
         db.commit()
         db.refresh(book)
         return book
+    except Exception:
+        db.rollback()
+        raise
+
+
+def delete_book(db: Session, book_id: int) -> bool:
+    book = get_book_by_id(db, book_id)
+
+    if book is None:
+        return False
+
+    active_borrows = (
+        db.query(Borrow)
+        .filter(
+            Borrow.book_id == book_id,
+            Borrow.status == "borrowed"
+        )
+        .first()
+    )
+
+    if active_borrows:
+        raise ValueError(
+            "Cannot delete a book that has active borrow records."
+        )
+
+    try:
+        db.delete(book)
+        db.commit()
+        return True
+
     except Exception:
         db.rollback()
         raise

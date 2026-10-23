@@ -6,7 +6,7 @@ from database import get_db
 from dependencies import get_current_user, require_roles
 from models import User
 from schemas import BookCreate, BookResponse, BookUpdate
-from services.book_services import get_books, get_book_by_id, create_book, update_book
+from services.book_services import get_books, get_book_by_id, create_book, update_book, delete_book
 
 router = APIRouter(prefix="/books", tags=["Books"])
 
@@ -78,3 +78,25 @@ def edit_book(
         )
 
     return book
+
+
+@router.delete("/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
+def remove_book(
+    book_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles("admin"))
+):
+    try:
+        deleted = delete_book(db, book_id)
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(error)
+        )
+
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Book not found."
+        )

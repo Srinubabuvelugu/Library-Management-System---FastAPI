@@ -13,10 +13,7 @@ from utils.jwt import decode_access_token
 bearer_scheme = HTTPBearer(auto_error=False)
 
 
-def get_current_user(
-    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
-    db: Session = Depends(get_db)
-) -> User:
+def get_current_user(credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),db: Session = Depends(get_db)) -> User:
 
     # 1. Check whether the Authorization header contains a bearer token
     if credentials is None:
