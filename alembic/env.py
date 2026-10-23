@@ -7,7 +7,7 @@ from alembic import context
 
 from database import Base
 from models import User, Book, Borrow
-
+import os
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -56,26 +56,37 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
+
 def run_migrations_online() -> None:
-    """Run migrations in 'online' mode.
+    from sqlalchemy import create_engine
 
-    In this scenario we need to create an Engine
-    and associate a connection with the context.
+    from database import DATABASE_URL
 
-    """
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
+    connect_args = {}
+    db_ca_cert = os.getenv("DB_CA_CERT", "")
+
+    if db_ca_cert:
+        ca_cert_path = "/tmp/aiven-ca.pem"
+        with open(ca_cert_path, "w") as cert_file:
+            cert_file.write(db_ca_cert)
+
+        connect_args["ssl"] = {"ca": ca_cert_path}
+
+    connectable = create_engine(
+        DATABASE_URL,
         poolclass=pool.NullPool,
+        connect_args=connect_args,
     )
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection,
+            target_metadata=target_metadata,
         )
 
         with context.begin_transaction():
             context.run_migrations()
+
 
 
 if context.is_offline_mode():
